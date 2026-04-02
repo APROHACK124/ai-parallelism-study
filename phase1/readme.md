@@ -11,3 +11,7 @@ Then I implemented a Neuron class that uses Values to maintain the weights and b
 At `notebook.ipynb` I run some tests over this implementation, basically creating a mlp with my implementation of autograd, and training over a `sklearn` simple dataset. In the second plot we can see that the model is actually learning something.
 
 Then I do some checks to verify that the gradients are properly calculated, using approximations, and then I check that the model is able to memorize examples if trained with just a few.
+
+chatGPT was only used to improve the code quality, ask for suggestions on the design, and looking for bugs.
+
+No line of code was written by AI in this directory
