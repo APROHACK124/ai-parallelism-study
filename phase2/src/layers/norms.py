@@ -1,0 +1,44 @@
+import torch
+import torch.nn as nn
+from typing import List, Tuple, Union, Optional
+
+class MyLayerNorm(nn.Module):
+    def __init__(self, normalized_shape: Union[List, int, torch.Size], eps=1e-05, elementwise_affine=True,
+                 bias = True):
+        super().__init__()
+
+        if isinstance(normalized_shape, int):
+            normalized_shape = [normalized_shape]
+
+        self.normalized_shape = normalized_shape
+        self.dimensions = tuple(range(-len(self.normalized_shape), 0))
+        self.eps = eps
+        self.elementwise_affine = elementwise_affine
+
+        if elementwise_affine:
+            self.weight = nn.parameter.Parameter(torch.ones(normalized_shape))
+            if bias:
+                self.bias = nn.parameter.Parameter(torch.zeros(normalized_shape))
+            else:
+                self.bias = None
+        
+        self.reset_parameters()
+
+    def reset_parameters(self):
+        if self.elementwise_affine:
+            nn.init.ones_(self.weight)
+            if self.bias is not None:
+                nn.init.zeros_(self.bias)
+
+    def forward(self, x: torch.Tensor):
+        mean = x.mean(dim=self.dimensions, keepdim=True)
+        var = x.var(dim=self.dimensions, keepdim=True, unbiased=False)
+        out = (x - mean)/torch.sqrt(var + self.eps)
+        if self.elementwise_affine:
+            out = out * self.weight
+            if self.bias is not None:
+                out = out + self.bias
+        return out
+     
+
+

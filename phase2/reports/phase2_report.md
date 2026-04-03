@@ -527,7 +527,19 @@ I ran a sanity-check script that:
 **Fix:** [how I corrected it]  
 **Lesson:** [what I learned]
 
----
+### 11. AI usage, and daily notes
+
+#### `nn.Embedding`
+
+I didn't know how to implement the padding_idx functionality, because i didn't knew that I could add a "hook" so that when the gradient for a tensor is calculated, some function I wrote can be called. So chatGPT told me about the existence of hooks, and how could I use it here so that at the padding_idx the gradient remains $0$.
+
+Other than that, everything was done by me.
+
+### `nn.LayerNorm`
+
+I had to read the paper on [Layer Normalization](https://arxiv.org/abs/1607.06450) to really understand what I was doing. 
+
+I had to look up how can I calculate the mean and variance on the last dimentions of a tensor. I learned about fundamental Numpy/PyTorch broadcasting
 
 ## 11. Final Decision: LayerNorm vs RMSNorm
 
@@ -542,35 +554,6 @@ Both normalization layers were implemented and validated. However, for the final
 ### Personal Observation
 
 [Write here whether you noticed differences in stability, simplicity, readability, or debugging difficulty.]
-
----
-
-## 12. Final Decision: Why Pre-Norm
-
-The final block was left in pre-norm form because:
-
-- it keeps the residual structure simple;
-- it is more natural to extend later to deeper stacks;
-- it separates normalization more cleanly from attention and MLP;
-- it provides a cleaner starting point for Phase 3.
-
-I did not implement post-norm in this phase because it was not necessary for the main objective and would have added an extra branch of complexity without much immediate value.
-
----
-
-## 13. What Remains for Phase 3
-
-Phase 2 leaves the codebase ready for:
-
-- tokenization;
-- positional embeddings;
-- a full decoder-only model;
-- a mini-LLM training loop;
-- pretraining on a small corpus;
-- more serious checkpointing;
-- real autoregressive evaluation.
-
-In other words, Phase 2 closes the “primitives + Transformer block” layer, and Phase 3 can now focus on “full model + training”.
 
 ---
 
