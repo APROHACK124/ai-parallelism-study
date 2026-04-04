@@ -45,5 +45,5 @@ class MyLayerNorm(nn.Module):
                 out = out + self.bias
         return out
      
-
-
+class MyRMSNorm(nn.Module):
+    def __init__(self,)

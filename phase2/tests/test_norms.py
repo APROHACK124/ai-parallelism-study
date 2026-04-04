@@ -59,3 +59,6 @@ m = MyLayerNorm(4).double()
 x = torch.randn(2, 3, 4, dtype=torch.double, requires_grad=True)
 
 gradcheck(lambda inp: m(inp), (x, ))
+
+
+### Here starts the testing for RMSNorm
