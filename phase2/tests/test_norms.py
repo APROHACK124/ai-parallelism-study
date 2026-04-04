@@ -5,11 +5,11 @@ from torch.testing import assert_close
 N ,H, W = 5, 3, 2
 
 # Here I will apply normalization over the last two dimensions of the tensor
-real_input = torch.randn(N, H, W)
-my_input = real_input.detach().clone()
+real_input = torch.randn(N, H, W, requires_grad=True)
+my_input = real_input.detach().clone().requires_grad_()
 
-real_layer_norm = torch.nn.LayerNorm(real_input[0].shape)
-my_layer_norm = MyLayerNorm(real_input[0].shape)
+real_layer_norm = torch.nn.LayerNorm([3, 2])
+my_layer_norm = MyLayerNorm([3, 2])
 
 assert_close(real_layer_norm.weight, my_layer_norm.weight)
 assert_close(real_layer_norm.bias, my_layer_norm.bias)
@@ -17,6 +17,45 @@ assert_close(real_layer_norm.bias, my_layer_norm.bias)
 real_output = real_layer_norm(real_input)
 my_output = my_layer_norm(my_input)
 
-print(real_output, my_output)
+# print(real_output, my_output)
+assert_close(real_output, my_output)
 
+real_output.sum().backward()
+my_output.sum().backward()
 
+assert_close(my_layer_norm.weight.grad, real_layer_norm.weight.grad)
+assert_close(my_layer_norm.bias.grad, real_layer_norm.bias.grad)
+assert_close(real_input.grad, my_input.grad)
+
+# Checking state_dict functionality
+
+copy_layerNorm = MyLayerNorm(real_input[0].shape)
+copy_layerNorm.load_state_dict(my_layer_norm.state_dict())
+
+x = torch.randn_like(my_input)
+x_cp = x.detach().clone()
+assert_close(copy_layerNorm(x_cp), my_layer_norm(x))
+
+# Checkig with elementwise_affine = False
+
+my_layer_norm = MyLayerNorm(2, eps=0.001, elementwise_affine=False)
+real_layer_norm = torch.nn.LayerNorm(2, eps=0.001, elementwise_affine=False)
+
+my_input = torch.randn_like(my_input)
+real_input = my_input.detach().clone()
+
+assert_close(my_layer_norm(my_input), real_layer_norm(real_input))
+
+print("ok!")
+
+# other forms of normalized_shape also work!
+
+# Another gradient check recommended by AI
+
+from torch.autograd import gradcheck
+
+m = MyLayerNorm(4).double()
+
+x = torch.randn(2, 3, 4, dtype=torch.double, requires_grad=True)
+
+gradcheck(lambda inp: m(inp), (x, ))

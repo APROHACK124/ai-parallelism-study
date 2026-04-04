@@ -539,7 +539,13 @@ Other than that, everything was done by me.
 
 I had to read the paper on [Layer Normalization](https://arxiv.org/abs/1607.06450) to really understand what I was doing. 
 
-I had to look up how can I calculate the mean and variance on the last dimentions of a tensor. I learned about fundamental Numpy/PyTorch broadcasting
+I had to look up how can I calculate the mean and variance on the last dimentions of a tensor. I learned about fundamental Numpy/PyTorch broadcasting.
+
+On AI review, chatGPT says that even if letting `self.bias = None` when `elementwise_affine=False` will behave correctly in the forward function, it's cleaner to still register it as a parameter with `self.register_parameter("bias", None)`.
+
+The same goes for self.weight.
+
+Also, in the tests, it's better to also check the gradient in the input tensors, that is, to put `requires_grad = True` when creating input tensors and checking that the gradients were correctly calculated.
 
 ## 11. Final Decision: LayerNorm vs RMSNorm
 

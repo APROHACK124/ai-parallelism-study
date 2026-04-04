@@ -3,24 +3,29 @@ import torch.nn as nn
 from typing import List, Tuple, Union, Optional
 
 class MyLayerNorm(nn.Module):
-    def __init__(self, normalized_shape: Union[List, int, torch.Size], eps=1e-05, elementwise_affine=True,
+    def __init__(self, normalized_shape: Union[List[int], int, torch.Size], eps=1e-05, elementwise_affine=True,
                  bias = True):
         super().__init__()
 
         if isinstance(normalized_shape, int):
-            normalized_shape = [normalized_shape]
+            normalized_shape = torch.Size([normalized_shape])
+        if isinstance(normalized_shape, List):
+            normalized_shape = torch.Size(normalized_shape)
 
         self.normalized_shape = normalized_shape
         self.dimensions = tuple(range(-len(self.normalized_shape), 0))
         self.eps = eps
         self.elementwise_affine = elementwise_affine
 
-        if elementwise_affine:
+        if self.elementwise_affine:
             self.weight = nn.parameter.Parameter(torch.ones(normalized_shape))
             if bias:
                 self.bias = nn.parameter.Parameter(torch.zeros(normalized_shape))
             else:
-                self.bias = None
+                self.register_parameter("bias", None)
+        else:
+            self.register_parameter("weight", None)
+            self.register_parameter("bias", None)
         
         self.reset_parameters()
 
