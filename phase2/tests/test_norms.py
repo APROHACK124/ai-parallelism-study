@@ -62,3 +62,50 @@ gradcheck(lambda inp: m(inp), (x, ))
 
 
 ### Here starts the testing for RMSNorm
+from src.layers.norms import MyRMSNorm
+import torch
+from torch.testing import assert_close
+
+my_x = torch.randn(4, 2, 3, requires_grad=True)
+real_x = my_x.detach().clone().requires_grad_()
+
+my_RMSNorm = MyRMSNorm([2, 3], elementwise_affine=False)
+real_RMSNorm = torch.nn.RMSNorm([2, 3], elementwise_affine=False)
+
+assert_close(real_RMSNorm(real_x), my_RMSNorm(my_x))
+
+my_out = my_RMSNorm(my_x).sum()
+real_out = real_RMSNorm(real_x).sum()
+
+my_out.backward()
+real_out.backward()
+
+assert_close(my_x.grad, real_x.grad)
+
+# So far so good, let's try with elementwise_affine=True
+
+my_RMSNorm = MyRMSNorm([3], elementwise_affine=True)
+real_RMSNorm = torch.nn.RMSNorm([3], elementwise_affine=True)
+
+assert_close(my_RMSNorm.weight, real_RMSNorm.weight)
+
+my_x = torch.randn([3, 3], requires_grad=True)
+real_x = my_x.detach().clone().requires_grad_()
+
+my_out = my_RMSNorm(my_x).mean()
+real_out = real_RMSNorm(real_x).mean()
+
+assert_close(my_out, real_out)
+my_out.backward()
+real_out.backward()
+assert_close(my_x.grad, real_x.grad)
+assert_close(my_RMSNorm.weight.grad, real_RMSNorm.weight.grad)
+
+
+# State dict testing
+
+cp_norm = MyRMSNorm([3], elementwise_affine=True)
+cp_norm.load_state_dict(my_RMSNorm.state_dict())
+
+assert_close(cp_norm(my_x), my_RMSNorm(my_x))
+my_RMSNorm(my_x)
